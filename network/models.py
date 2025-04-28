@@ -17,6 +17,6 @@ class Post(models.Model):
             "author": self.author.username,
             "text": self.text,
             "date": self.date.strftime("%d-%B-%Y %H:%M"),
-            "likes": self.likes.count
+            "likes": self.likes.count()
         }
 

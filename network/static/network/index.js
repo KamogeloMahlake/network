@@ -1,8 +1,9 @@
 function Form({value, onSubmit, onChange})
 {
   return (
+  <div style={{border: "1px solid black", margin: "2rem"}}>
     <div className="border-bottom p-3">
-      <div className="lead mb-2">New Post</div>
+      <h2>New Post</h2>
       <form onSubmit={onSubmit}>
         <textarea
           className="form-control" 
@@ -11,23 +12,43 @@ function Form({value, onSubmit, onChange})
           onChange={onChange}
         >
         </textarea>
-        <button type="submit" className="btn btn-primary d-flex ml-auto mt-2">Post</button>
+        <button type="submit" className="btn btn-primary d-flex mt-2">Post</button>
       </form>
     </div>
-  )
+  </div>
+  );
 }
 
-function Post()
+function Post({author})
 {
-  return;  
+  return (
+    <div style={{border: "1px solid black", margin: "2rem"}}>
+      <h2>{author}</h2>
+      <a>Edit</a>
+      <p></p>
+    </div>
+  ); 
 }
 
 function App()
 {
-  const [text, setText] = React.useState("");
+  const [state, setState] = React.useState({
+    text: "",
+    posts: []
+  });
+
+  const handlePosts = () => {
+    fetch('/posts')
+    .then(r => r.json())
+    .then(d => setState({...state, posts: d.posts}));
+  };
+
 
   const handleChange = e => {
-    setText(e.target.value);
+    setState({
+      ...state,
+      text: e.target.value
+    });
   };
 
   const handleSubmit = (e) => {
@@ -35,21 +56,31 @@ function App()
     fetch('/compose', {
       method: 'POST',
       body: JSON.stringify({
-        text: text
+        text: state.text
       })
     })
     .then(r => r.json())
     .then(d => {
       console.log(d);
-      setText("");
+      setState({
+        ...state,
+        text: ""
+      });
     })
     .catch(e => console.log(e));
 
   };
-
+  React.useEffect(() => handlePosts(), []);
   return (
     <>
-      <Form value={text} onChange={handleChange} onSubmit={handleSubmit}/>
+      <Form value={state.text} onChange={handleChange} onSubmit={handleSubmit}/>
+      {state.posts.map(({author, text, date}, index) => {
+        return (
+          <Post
+          author={author} 
+          />
+        )
+      })}
     </>
   );
 }

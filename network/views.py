@@ -1,6 +1,7 @@
 import json 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
@@ -29,6 +30,11 @@ def compose(request):
     
     return JsonResponse({"error": "POST can not be empty"}, status=400)
 
+@csrf_exempt
+def posts(request):
+    posts = Post.objects.all()
+    posts = [post.serialize() for post in posts]
+    return JsonResponse({"posts": posts})
 
 def following(request):
     pass 
