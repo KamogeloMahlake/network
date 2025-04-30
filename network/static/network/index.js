@@ -19,15 +19,47 @@ function Form({value, onSubmit, onChange})
   );
 }
 
-function Post({author})
+function Post({author, text, date, likes})
 {
   return (
     <div style={{border: "1px solid black", margin: "2rem"}}>
       <h2>{author}</h2>
       <a>Edit</a>
-      <p></p>
+      <p style={{fontWeight: "bold"}}>{text}</p>
+      <p>{date}</p>
+      <div>
+        <button></button><span>{likes}</span>
+      </div>
     </div>
   ); 
+}
+
+function Page({data})
+{
+  console.log(data.posts)
+  if (data.posts)
+  {
+  return (
+    <>
+      {data.posts.map(({author, text, date, likes}, index) => {
+        return (
+          <Post author={author} text={text} date={data} likes={likes} key={index}/>
+        )
+      })}
+      <nav aria-label="Page navigation">
+        <ul className="pagination justify-content-center">
+          <li>Tisi</li>
+        </ul>
+      </nav>
+    </>
+  );
+} else {
+  return (
+    <>
+    </>
+  )
+}
+
 }
 
 function App()
@@ -38,9 +70,11 @@ function App()
   });
 
   const handlePosts = () => {
-    fetch('/posts')
+    fetch('/posts/1')
     .then(r => r.json())
-    .then(d => setState({...state, posts: d.posts}));
+    .then(d => {
+      console.log(d);
+      setState({...state, posts: d})});
   };
 
 
@@ -70,17 +104,12 @@ function App()
     .catch(e => console.log(e));
 
   };
-  React.useEffect(() => handlePosts(), []);
+  React.useEffect(() => handlePosts(), [Page]);
   return (
     <>
       <Form value={state.text} onChange={handleChange} onSubmit={handleSubmit}/>
-      {state.posts.map(({author, text, date}, index) => {
-        return (
-          <Post
-          author={author} 
-          />
-        )
-      })}
+      <Page data={state.posts} />   
+
     </>
   );
 }
