@@ -34,31 +34,48 @@ function Post({author, text, date, likes})
   ); 
 }
 
-function Page({data})
+
+function Page({data, page})
 {
-  console.log(data.posts)
+
   if (data.posts)
   {
+    const {posts, num, current, prev, next} = data;
+    console.log([...Array(num).keys()])
   return (
-    <>
-      {data.posts.map(({author, text, date, likes}, index) => {
+    <div>
+      {posts.map(({author, text, date, likes}, index) => {
         return (
-          <Post author={author} text={text} date={data} likes={likes} key={index}/>
+          <Post author={author} text={text} date={date} likes={likes} key={index}/>
         )
       })}
-      <nav aria-label="Page navigation">
-        <ul className="pagination justify-content-center">
-          <li>Tisi</li>
+
+      <nav aria-label="...">
+        <ul class="pagination justify-content-center">
+          <li onClick={page} id={String(current - 1)} class={prev ? "page-item" : "page-item disabled"}>
+            <span class="page-link">Previous</span>
+          </li>
+          {num > 1 && [...Array(num).keys().map(n => {
+            return (
+            <li onClick={page} id={String(n + 1)} class={current === n + 1 ? "page-item active" : "page-item"}>
+              <span class="page-link">{n + 1}</span>
+            </li>
+            )
+          })]}
+          <li class={next ? "page-item" : "page-item disabled"}>
+            <span onClick={page} id={String(current + 1)} class="page-link">Next</span>
+          </li>
         </ul>
       </nav>
-    </>
+    </div>
   );
 } else {
   return (
-    <>
-    </>
-  )
-}
+    <div>
+      <h2>No Posts available</h2>
+    </div>
+  );
+  }
 
 }
 
@@ -66,17 +83,23 @@ function App()
 {
   const [state, setState] = React.useState({
     text: "",
-    posts: []
+    posts: [], 
+    currentPage: 1
   });
 
   const handlePosts = () => {
-    fetch('/posts/1')
+    fetch(`/posts/${state.currentPage}`)
     .then(r => r.json())
     .then(d => {
       console.log(d);
-      setState({...state, posts: d})});
+      setState({...state, posts: d, text: ""})});
   };
 
+  const handlePageChange = (e) => {
+    console.log(e.target.id)
+    setState({...state, currentPage: parseInt(e.target.value) });
+    console.log(state)
+  };
 
   const handleChange = e => {
     setState({
@@ -96,6 +119,7 @@ function App()
     .then(r => r.json())
     .then(d => {
       console.log(d);
+      handlePosts();
       setState({
         ...state,
         text: ""
@@ -104,12 +128,11 @@ function App()
     .catch(e => console.log(e));
 
   };
-  React.useEffect(() => handlePosts(), [Page]);
+  React.useEffect(() => handlePosts(), []);
   return (
     <>
       <Form value={state.text} onChange={handleChange} onSubmit={handleSubmit}/>
-      <Page data={state.posts} />   
-
+      <Page data={state.posts} page={handlePageChange}/>   
     </>
   );
 }
