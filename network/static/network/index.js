@@ -22,7 +22,7 @@ function Form({value, onSubmit, onChange})
 function Post({author, text, date, likes})
 {
   return (
-    <div style={{border: "1px solid black", margin: "2rem"}}>
+    <div className="p-3" style={{border: "1px solid black", margin: "2rem"}}>
       <h2>{author}</h2>
       <a>Edit</a>
       <p style={{fontWeight: "bold"}}>{text}</p>
@@ -101,7 +101,7 @@ function App()
     .then(r => r.json())
     .then(d => {
       console.log(d);
-      handlePosts();
+      loadPosts(state.current);
       setState({
         ...state,
         text: ""
