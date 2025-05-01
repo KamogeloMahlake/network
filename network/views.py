@@ -32,7 +32,7 @@ def compose(request):
 
 @csrf_exempt
 def posts(request, page_nr):
-    posts = Post.objects.all()
+    posts = Post.objects.all().order_by("-date")
     p = Paginator(posts, 10)
     current_posts = p.page(page_nr)
     return JsonResponse({

@@ -35,38 +35,20 @@ function Post({author, text, date, likes})
 }
 
 
-function Page({data, page})
+function Page({data})
 {
 
-  if (data.posts)
+  if (data)
   {
-    const {posts, num, current, prev, next} = data;
-    console.log([...Array(num).keys()])
   return (
     <div>
-      {posts.map(({author, text, date, likes}, index) => {
+      {data.map(({author, text, date, likes}, index) => {
         return (
           <Post author={author} text={text} date={date} likes={likes} key={index}/>
         )
       })}
 
-      <nav aria-label="...">
-        <ul class="pagination justify-content-center">
-          <li onClick={page} id={String(current - 1)} class={prev ? "page-item" : "page-item disabled"}>
-            <span class="page-link">Previous</span>
-          </li>
-          {num > 1 && [...Array(num).keys().map(n => {
-            return (
-            <li onClick={page} id={String(n + 1)} class={current === n + 1 ? "page-item active" : "page-item"}>
-              <span class="page-link">{n + 1}</span>
-            </li>
-            )
-          })]}
-          <li class={next ? "page-item" : "page-item disabled"}>
-            <span onClick={page} id={String(current + 1)} class="page-link">Next</span>
-          </li>
-        </ul>
-      </nav>
+      
     </div>
   );
 } else {
@@ -76,7 +58,6 @@ function Page({data, page})
     </div>
   );
   }
-
 }
 
 function App()
@@ -84,21 +65,22 @@ function App()
   const [state, setState] = React.useState({
     text: "",
     posts: [], 
-    currentPage: 1
-  });
+    current: 1,
+    numOfPages: 0,
+    prev: false,
+    next: false
+    });
 
-  const handlePosts = () => {
-    fetch(`/posts/${state.currentPage}`)
+  const loadPosts = (p) => {
+    fetch(`/posts/${p}`)
     .then(r => r.json())
     .then(d => {
       console.log(d);
-      setState({...state, posts: d, text: ""})});
+      setState({posts: d.posts, text: "", current: d.current, numOfPages: d.num, prev: d.prev, next: d.next})});
   };
 
   const handlePageChange = (e) => {
-    console.log(e.target.id)
-    setState({...state, currentPage: parseInt(e.target.value) });
-    console.log(state)
+    loadPosts(parseInt(e.target.id));
   };
 
   const handleChange = e => {
@@ -128,11 +110,31 @@ function App()
     .catch(e => console.log(e));
 
   };
-  React.useEffect(() => handlePosts(), []);
+  React.useEffect(() => loadPosts(state.current), []);
   return (
     <>
       <Form value={state.text} onChange={handleChange} onSubmit={handleSubmit}/>
-      <Page data={state.posts} page={handlePageChange}/>   
+      <Page data={state.posts} />
+      
+      {state.numOfPages && 
+      <nav aria-label="...">
+        <ul class="pagination justify-content-center">
+          <li class={state.prev ? "page-item" : "page-item disabled"}>
+            <span  onClick={handlePageChange} id={String(state.current - 1)} class="page-link">Previous</span>
+          </li>
+           {[...Array(state.numOfPages).keys().map(n => {
+            return (
+            <li class={state.current === n + 1 ? "page-item active" : "page-item"}>
+              <span id={String(n + 1)} onClick={handlePageChange} class="page-link">{n + 1}</span>
+            </li>
+            )
+          })]}
+          <li class={state.next ? "page-item" : "page-item disabled"}>
+            <span onClick={handlePageChange} id={String(state.current + 1)} class="page-link">Next</span>
+          </li>
+        </ul>
+      </nav>
+      }   
     </>
   );
 }
