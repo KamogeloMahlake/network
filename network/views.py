@@ -46,11 +46,20 @@ def posts(request, page_nr):
 def following(request):
     pass 
 
-def like(request):
-    pass 
+def like(request, id):
+    post = Post.objects.get(pk=id)
+
+    if request.user in post.like.all():
+        post.like.remove(request.user)
+    else:
+        post.like.add(request.user)
+
+    return JsonResponse({"like": True})
+     
 
 def profile(request):
-    pass 
+    if request.user.is_authenticated:
+        pass
 
 def edit(request):
     pass 
