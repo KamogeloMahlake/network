@@ -28,7 +28,7 @@ function Post({author, text, date, likes})
       <p style={{fontWeight: "bold"}}>{text}</p>
       <p>{date}</p>
       <div>
-        <button></button><span>{likes}</span>
+        <button className="btn btn-link text-decoration-none text-danger p-0 mt-2"><i className="fas fa-heart"></i></button><span>{likes}</span>
       </div>
     </div>
   ); 
@@ -68,7 +68,8 @@ function App()
     current: 1,
     numOfPages: 0,
     prev: false,
-    next: false
+    next: false,
+    currentView: "All Posts"
     });
 
   const loadPosts = (p) => {
@@ -76,7 +77,7 @@ function App()
     .then(r => r.json())
     .then(d => {
       console.log(d);
-      setState({posts: d.posts, text: "", current: d.current, numOfPages: d.num, prev: d.prev, next: d.next})});
+      setState({...state, posts: d.posts, text: "", current: d.current, numOfPages: d.num, prev: d.prev, next: d.next})});
   };
 
   const handlePageChange = (e) => {
@@ -113,6 +114,7 @@ function App()
   React.useEffect(() => loadPosts(state.current), []);
   return (
     <>
+      <h1 style={{margin: "2rem"}}>{state.currentView}</h1>
       <Form value={state.text} onChange={handleChange} onSubmit={handleSubmit}/>
       <Page data={state.posts} />
       
