@@ -28,7 +28,7 @@ function Post({author, text, date, likes})
       <p style={{fontWeight: "bold"}}>{text}</p>
       <p>{date}</p>
       <div>
-        <button className="btn btn-link text-decoration-none text-danger p-0 mt-2"><i className="fas fa-heart"></i></button><span>{likes}</span>
+        <button className="btn btn-link text-decoration-none text-danger p-0 mt-2"><i className="fas fa-heart"></i><span>{likes}</span></button>
       </div>
     </div>
   ); 
@@ -111,6 +111,8 @@ function App()
     .catch(e => console.log(e));
 
   };
+
+  document.getElementById('username').addEventListener('click', e => console.log(e));
   React.useEffect(() => loadPosts(state.current), []);
   return (
     <>
