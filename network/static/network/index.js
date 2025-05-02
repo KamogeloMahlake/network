@@ -1,3 +1,44 @@
+function Navbar({user})
+{
+  return (
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="/">Network</a>
+    <div>
+      <ul class="navbar-nav mr-auto">
+        {user &&
+        <li class="nav-item">
+          <a class="nav-link" href="/profile"><strong id="username">{user}</strong></a>
+        </li>
+        }
+        <li class="nav-item">
+          <a class="nav-link" href="/">All Posts</a>
+        </li>
+        {user &&
+        <li class="nav-item">
+          <a class="nav-link" href="">Following</a>
+        </li>
+        }
+        {user &&
+        <li class="nav-item">
+          <a class="nav-link" href="/logout">Log Out</a>
+        </li>
+        }
+        {!user &&
+        <li class="nav-item">
+          <a class="nav-link" href="/login">Log In</a>
+        </li>
+        }
+        {!user &&
+        <li class="nav-item">
+          <a class="nav-link" href="/register">Register</a>
+        </li>
+        }
+      </ul>        
+    </div>
+  </nav>            
+  );
+}
+
 function Form({value, onSubmit, onChange})
 {
   return (
@@ -63,6 +104,7 @@ function Page({data})
 function App()
 {
   const [state, setState] = React.useState({
+    user: "",
     text: "",
     posts: [], 
     current: 1,
@@ -77,7 +119,7 @@ function App()
     .then(r => r.json())
     .then(d => {
       console.log(d);
-      setState({...state, posts: d.posts, text: "", current: d.current, numOfPages: d.num, prev: d.prev, next: d.next})});
+      setState({...state, posts: d.posts, text: "", current: d.current, numOfPages: d.num, prev: d.prev, next: d.next, user: d.user})});
   };
 
   const handlePageChange = (e) => {
@@ -112,10 +154,10 @@ function App()
 
   };
 
-  document.getElementById('username').addEventListener('click', e => console.log(e));
   React.useEffect(() => loadPosts(state.current), []);
   return (
     <>
+      <Navbar user={state.user}/>
       <h1 style={{margin: "2rem"}}>{state.currentView}</h1>
       <Form value={state.text} onChange={handleChange} onSubmit={handleSubmit}/>
       <Page data={state.posts} />

@@ -36,7 +36,8 @@ def posts(request, page_nr):
     p = Paginator(posts, 10)
     current_posts = p.page(page_nr)
     return JsonResponse({
-        "posts": [post.serialize() for post in current_posts.object_list],
+        "user": request.user.username if request.user.is_authenticated else "" ,
+        "posts": [post.serialize(request.user) for post in current_posts.object_list],
         "num": p.num_pages,
         "current": page_nr,
         "prev": current_posts.has_previous(),
