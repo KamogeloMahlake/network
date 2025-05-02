@@ -49,7 +49,9 @@ def following(request):
 
 def like(request, id):
     post = Post.objects.get(pk=id)
-
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "User not login"}, status=400)
+    
     if request.user in post.like.all():
         post.like.remove(request.user)
     else:

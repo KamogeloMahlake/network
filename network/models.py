@@ -11,7 +11,7 @@ class Post(models.Model):
     text = models.TextField()
     date = models.DateTimeField(auto_now_add=True)
 
-    like = models.ManyToManyField("Post", related_name="likes", blank=True)
+    like = models.ManyToManyField("User", related_name="likes", blank=True)
     def serialize(self, user):
         return {
             "id": self.id,

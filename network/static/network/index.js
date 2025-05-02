@@ -60,7 +60,7 @@ function Form({value, onSubmit, onChange})
   );
 }
 
-function Post({author, text, date, likes})
+function Post({id, author, text, date, likes, click})
 {
   return (
     <div className="p-3" style={{border: "1px solid black", margin: "2rem"}}>
@@ -69,23 +69,23 @@ function Post({author, text, date, likes})
       <p style={{fontWeight: "bold"}}>{text}</p>
       <p>{date}</p>
       <div>
-        <button className="btn btn-link text-decoration-none text-danger p-0 mt-2"><i className="fas fa-heart"></i><span>{likes}</span></button>
+        <button id={id} onClick={click} className="btn btn-link text-decoration-none text-danger p-0 mt-2"><i id={id} className="fas fa-heart"></i><span>{likes}</span></button>
       </div>
     </div>
   ); 
 }
 
 
-function Page({data})
+function Page({data, f})
 {
 
   if (data)
   {
   return (
     <div>
-      {data.map(({author, text, date, likes}, index) => {
+      {data.map(({id, author, text, date, likes}, index) => {
         return (
-          <Post author={author} text={text} date={date} likes={likes} key={index}/>
+          <Post id={id} click={f} author={author} text={text} date={date} likes={likes} key={index}/>
         )
       })}
 
@@ -114,6 +114,10 @@ function App()
     currentView: "All Posts"
     });
 
+  const handleLike = (e) => {
+    console.log(e.target.id)
+    fetch(`/like/${e.target.id}`).then(r => r.json()).then(_d => loadPosts(state.current)).catch(e => console.log(e));
+  };
   const loadPosts = (p) => {
     fetch(`/posts/${p}`)
     .then(r => r.json())
@@ -160,7 +164,7 @@ function App()
       <Navbar user={state.user}/>
       <h1 style={{margin: "2rem"}}>{state.currentView}</h1>
       <Form value={state.text} onChange={handleChange} onSubmit={handleSubmit}/>
-      <Page data={state.posts} />
+      <Page data={state.posts}  f={handleLike}/>
       
       {state.numOfPages && 
       <nav aria-label="...">
