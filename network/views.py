@@ -31,13 +31,18 @@ def compose(request):
     return JsonResponse({"error": "POST can not be empty"}, status=400)
 
 @csrf_exempt
-def posts(request, page_nr):
-    posts = Post.objects.all().order_by("-date")
+def posts(request, view, page_nr):
+    if view == "allposts":
+        posts = Post.objects.all().order_by("-date")
+    elif view == "profile" and request.user.is_authenticated:
+        posts = Post.objects.filter(author=request.user).order_by("-date")
+
     p = Paginator(posts, 10)
     current_posts = p.page(page_nr)
+    
     return JsonResponse({
-        "user": request.user.username if request.user.is_authenticated else "" ,
-        "posts": [post.serialize(request.user) for post in current_posts.object_list],
+        "user": request.user.to_json() if request.user.username else None ,
+        "posts": [post.to_json(request.user) for post in current_posts.object_list],
         "num": p.num_pages,
         "current": page_nr,
         "prev": current_posts.has_previous(),
@@ -62,7 +67,8 @@ def like(request, id):
 
 def profile(request):
     if request.user.is_authenticated:
-        pass
+        pass 
+    JsonResponse({"error": "User must be login"}, status=400)
 
 def edit(request):
     pass 

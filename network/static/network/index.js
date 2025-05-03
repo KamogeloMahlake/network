@@ -1,17 +1,17 @@
-function Navbar({user})
+function Navbar({user, profile, home, logout})
 {
   return (
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" href="/">Network</a>
+    <a class="navbar-brand" onClick={home}>Network</a>
     <div>
       <ul class="navbar-nav mr-auto">
         {user &&
         <li class="nav-item">
-          <a class="nav-link" href="/profile"><strong id="username">{user}</strong></a>
+          <a onClick={profile} class="nav-link"><strong id="username">{user.username}</strong></a>
         </li>
         }
         <li class="nav-item">
-          <a class="nav-link" href="/">All Posts</a>
+          <a class="nav-link" onClick={home}>All Posts</a>
         </li>
         {user &&
         <li class="nav-item">
@@ -20,7 +20,7 @@ function Navbar({user})
         }
         {user &&
         <li class="nav-item">
-          <a class="nav-link" href="/logout">Log Out</a>
+          <a onClick={logout} class="nav-link" href="/logout">Log Out</a>
         </li>
         }
         {!user &&
@@ -101,33 +101,54 @@ function Page({data, f})
   }
 }
 
+function Profile({user})
+{
+  return (
+    <div style={{margin: "2rem"}}>
+      <h1>Profile: {user.username}</h1>
+      <p>Follower: {user.followers}</p>
+      <p>Following: {user.following.length}</p>
+    </div>
+  )
+}
+
 function App()
 {
   const [state, setState] = React.useState({
-    user: "",
+    user: [],
     text: "",
     posts: [], 
     current: 1,
     numOfPages: 0,
     prev: false,
     next: false,
-    currentView: "All Posts"
+    currentView: "allposts"
     });
+
+  const handleLogout = () => {
+    fetch('/logout').then(r => r.json).then(_d => loadPosts('allpost', 1));
+  };
+  const handleProfile = () => {
+    loadPosts("profile", 1);
+  };
+
+  const handleAllPost = () => {
+    loadPosts('allposts', 1);
+  };
 
   const handleLike = (e) => {
     console.log(e.target.id)
-    fetch(`/like/${e.target.id}`).then(r => r.json()).then(_d => loadPosts(state.current)).catch(e => console.log(e));
+    fetch(`/like/${e.target.id}`).then(r => r.json()).then(_d => loadPosts(state.currentView, state.current)).catch(e => console.log(e));
   };
-  const loadPosts = (p) => {
-    fetch(`/posts/${p}`)
+  const loadPosts = (c, p) => {
+    fetch(`/posts/${c}/${p}`)
     .then(r => r.json())
     .then(d => {
-      console.log(d);
-      setState({...state, posts: d.posts, text: "", current: d.current, numOfPages: d.num, prev: d.prev, next: d.next, user: d.user})});
+      setState({...state, posts: d.posts, text: "", current: d.current, numOfPages: d.num, prev: d.prev, next: d.next, user: d.user, currentView: c})});
   };
 
   const handlePageChange = (e) => {
-    loadPosts(parseInt(e.target.id));
+    loadPosts(state.currentView, parseInt(e.target.id));
   };
 
   const handleChange = e => {
@@ -148,7 +169,7 @@ function App()
     .then(r => r.json())
     .then(d => {
       console.log(d);
-      loadPosts(state.current);
+      loadPosts(state.currentView, state.current);
       setState({
         ...state,
         text: ""
@@ -158,12 +179,12 @@ function App()
 
   };
 
-  React.useEffect(() => loadPosts(state.current), []);
+  React.useEffect(() => loadPosts(state.currentView, state.current), []);
   return (
     <>
-      <Navbar user={state.user}/>
-      <h1 style={{margin: "2rem"}}>{state.currentView}</h1>
-      <Form value={state.text} onChange={handleChange} onSubmit={handleSubmit}/>
+      <Navbar user={state.user} home={handleAllPost} profile={handleProfile} logout={handleLogout}/>
+      {state.currentView === 'allposts' && <Form value={state.text} onChange={handleChange} onSubmit={handleSubmit}/>}
+      {state.currentView === 'profile' && <Profile user={state.user}/>}
       <Page data={state.posts}  f={handleLike}/>
       
       {state.numOfPages && 

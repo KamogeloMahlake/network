@@ -3,8 +3,15 @@ from django.db import models
 
 
 class User(AbstractUser):
-    followers = models.ManyToManyField("self", related_name="following", blank=True)
-    pass
+    followers = models.ManyToManyField("self", related_name="following", blank=True, symmetrical=False)
+    
+    def to_json(self):
+        return {
+            "username": self.username,
+            "followers": self.followers.count(),
+            "following": [user.username for user in self.following.all()]
+        }
+
 
 class Post(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="posts")
@@ -12,7 +19,7 @@ class Post(models.Model):
     date = models.DateTimeField(auto_now_add=True)
 
     like = models.ManyToManyField("User", related_name="likes", blank=True)
-    def serialize(self, user):
+    def to_json(self, user):
         return {
             "id": self.id,
             "author": self.author.username,
