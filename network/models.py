@@ -23,9 +23,12 @@ class Post(models.Model):
         return {
             "id": self.id,
             "author": self.author.username,
+            "authorId": self.author.id,
             "text": self.text,
             "date": self.date.strftime("%d-%B-%Y %H:%M"),
             "likes": self.like.count(),
-            "liked": user.is_authenticated and user in self.like.all()
+            "liked": user.is_authenticated and user in self.like.all(),
+            "following": user in self.author.followers.all(),
+            "isAuthor": user == self.author
         }
 

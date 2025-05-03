@@ -52,6 +52,18 @@ def posts(request, view, page_nr):
 def following(request):
     pass 
 
+def follow(request, id):
+    user = User.objects.get(pk=id)
+
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "User not login"}, status=400)
+    if request.user in user.followers.all():
+        user.followers.remove(request.user)
+    else:
+        user.followers.add(request.user)
+    return JsonResponse({"follow": True})
+
+
 def like(request, id):
     post = Post.objects.get(pk=id)
     if not request.user.is_authenticated:

@@ -60,32 +60,35 @@ function Form({value, onSubmit, onChange})
   );
 }
 
-function Post({id, author, text, date, likes, click})
+function Post({id, author, authorId, text, date, likes, following, isAuthor, click, follow, liked})
 {
   return (
     <div className="p-3" style={{border: "1px solid black", margin: "2rem"}}>
-      <h2>{author}</h2>
+      <div class="r">
+        <h2>{author}</h2>
+        <button class={following ? "btn btn-danger" : "btn btn-primary"} id={authorId} onClick={follow} disabled={isAuthor ? true : false}>{following ? "Unfollow": "Follow"}</button>
+      </div>
       <a>Edit</a>
       <p style={{fontWeight: "bold"}}>{text}</p>
       <p>{date}</p>
       <div>
-        <button id={id} onClick={click} className="btn btn-link text-decoration-none text-danger p-0 mt-2"><i id={id} className="fas fa-heart"></i><span>{likes}</span></button>
+        <button id={id} onClick={click} className="btn btn-link text-decoration-none text-danger p-0 mt-2"><i id={id} className={liked ? "fas fa-heart" : "far fa-heart"}></i><span>{likes}</span></button>
       </div>
     </div>
   ); 
 }
 
 
-function Page({data, f})
+function Page({data, f, follow})
 {
 
   if (data)
   {
   return (
     <div>
-      {data.map(({id, author, text, date, likes}, index) => {
+      {data.map(({id, author, authorId, text, date, likes, following, isAuthor, liked}, index) => {
         return (
-          <Post id={id} click={f} author={author} text={text} date={date} likes={likes} key={index}/>
+          <Post liked={liked} authorId={authorId} follow={follow} id={id} click={f} author={author} text={text} date={date} likes={likes} key={index} following={following} isAuthor={isAuthor}/>
         )
       })}
 
@@ -125,6 +128,12 @@ function App()
     currentView: "allposts"
     });
 
+  const handleFollow = (e) => {
+    fetch(`/follow/${parseInt(e.target.id)}`).then(r => r.json()).then(d => {
+      console.log(d);
+      loadPosts(state.currentView, state.current);})
+      .catch(e => console.log(e));
+  };
   const handleLogout = () => {
     fetch('/logout').then(r => r.json).then(_d => loadPosts('allpost', 1));
   };
@@ -144,6 +153,7 @@ function App()
     fetch(`/posts/${c}/${p}`)
     .then(r => r.json())
     .then(d => {
+      console.log(d);
       setState({...state, posts: d.posts, text: "", current: d.current, numOfPages: d.num, prev: d.prev, next: d.next, user: d.user, currentView: c})});
   };
 
@@ -185,7 +195,7 @@ function App()
       <Navbar user={state.user} home={handleAllPost} profile={handleProfile} logout={handleLogout}/>
       {state.currentView === 'allposts' && <Form value={state.text} onChange={handleChange} onSubmit={handleSubmit}/>}
       {state.currentView === 'profile' && <Profile user={state.user}/>}
-      <Page data={state.posts}  f={handleLike}/>
+      <Page data={state.posts}  f={handleLike} follow={handleFollow}/>
       
       {state.numOfPages && 
       <nav aria-label="...">
