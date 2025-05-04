@@ -60,26 +60,23 @@ function Form({value, onSubmit, onChange})
   );
 }
 
-function Post({id, author, authorId, text, date, likes, following, isAuthor, click, follow, liked})
+function Post({id, author, authorId, text, date, likes, following, isAuthor, click, follow, liked, profile})
 {
   return (
     <div className="p-3" style={{border: "1px solid black", margin: "2rem"}}>
-      <div class="r">
-        <h2>{author}</h2>
-        <button class={following ? "btn btn-danger" : "btn btn-primary"} id={authorId} onClick={follow} disabled={isAuthor ? true : false}>{following ? "Unfollow": "Follow"}</button>
-      </div>
+        <h2 onClick={profile} id={authorId}>{author}</h2>
       <a>Edit</a>
       <p style={{fontWeight: "bold"}}>{text}</p>
       <p>{date}</p>
       <div>
-        <button id={id} onClick={click} className="btn btn-link text-decoration-none text-danger p-0 mt-2"><i id={id} className={liked ? "fas fa-heart" : "far fa-heart"}></i><span>{likes}</span></button>
+        <button id={id} onClick={click} className="btn btn-link text-decoration-none text-danger p-0 mt-2"><i id={id} className={liked ? "fas fa-heart" : "far fa-heart"}></i> {likes}</button>
       </div>
     </div>
   ); 
 }
 
 
-function Page({data, f, follow})
+function Page({data, f, profile})
 {
 
   if (data)
@@ -88,11 +85,9 @@ function Page({data, f, follow})
     <div>
       {data.map(({id, author, authorId, text, date, likes, following, isAuthor, liked}, index) => {
         return (
-          <Post liked={liked} authorId={authorId} follow={follow} id={id} click={f} author={author} text={text} date={date} likes={likes} key={index} following={following} isAuthor={isAuthor}/>
+          <Post profile={profile} liked={liked} authorId={authorId}  id={id} click={f} author={author} text={text} date={date} likes={likes} key={index} following={following} isAuthor={isAuthor}/>
         )
       })}
-
-      
     </div>
   );
 } else {
@@ -104,13 +99,16 @@ function Page({data, f, follow})
   }
 }
 
-function Profile({user})
+function Profile({user, username, follow})
 {
   return (
     <div style={{margin: "2rem"}}>
       <h1>Profile: {user.username}</h1>
       <p>Follower: {user.followers}</p>
       <p>Following: {user.following.length}</p>
+
+      {username && 
+      <button className={user.following.include(username) ? "btn btn-danger" : "btn btn-primary"} id={user.id} onClick={follow} disabled={user.username === username ? true : false}>{user.following.include(username) ? "Unfollow": "Follow"}</button>}
     </div>
   )
 }
@@ -118,9 +116,10 @@ function Profile({user})
 function App()
 {
   const [state, setState] = React.useState({
-    user: [],
+    user: null,
+    profileUser: null,
     text: "",
-    posts: [], 
+    posts: null, 
     current: 1,
     numOfPages: 0,
     prev: false,
@@ -131,34 +130,35 @@ function App()
   const handleFollow = (e) => {
     fetch(`/follow/${parseInt(e.target.id)}`).then(r => r.json()).then(d => {
       console.log(d);
-      loadPosts(state.currentView, state.current);})
+      loadPosts(state.currentView, state.profileUser ? state.profileUser.id : 0, state.current);})
       .catch(e => console.log(e));
   };
   const handleLogout = () => {
-    fetch('/logout').then(r => r.json).then(_d => loadPosts('allpost', 1));
+    fetch('/logout').then(r => r.json).then(_d => loadPosts('allpost', 0, 1));
   };
-  const handleProfile = () => {
-    loadPosts("profile", 1);
+  const handleProfile = (e) => {
+    
+    loadPosts("profile", e.target.id, 1);
   };
 
   const handleAllPost = () => {
-    loadPosts('allposts', 1);
+    loadPosts('allposts', 0, 1);
   };
 
   const handleLike = (e) => {
     console.log(e.target.id)
-    fetch(`/like/${e.target.id}`).then(r => r.json()).then(_d => loadPosts(state.currentView, state.current)).catch(e => console.log(e));
+    fetch(`/like/${e.target.id}`).then(r => r.json()).then(_d => loadPosts(state.currentView,  state.profileUser ? state.profileUser.id : 0, state.current)).catch(e => console.log(e));
   };
-  const loadPosts = (c, p) => {
-    fetch(`/posts/${c}/${p}`)
+  const loadPosts = (c, id, p) => {
+    fetch(`/posts/${c}/${id}/${p}`)
     .then(r => r.json())
     .then(d => {
       console.log(d);
-      setState({...state, posts: d.posts, text: "", current: d.current, numOfPages: d.num, prev: d.prev, next: d.next, user: d.user, currentView: c})});
+      setState({...state, profileUser: d.profileUser,  posts: d.posts, text: "", current: d.current, numOfPages: d.num, prev: d.prev, next: d.next, user: d.user, currentView: c})});
   };
 
   const handlePageChange = (e) => {
-    loadPosts(state.currentView, parseInt(e.target.id));
+    loadPosts(state.currentView, state.profileUser ? state.profileUser.id : 0, parseInt(e.target.id));
   };
 
   const handleChange = e => {
@@ -179,7 +179,7 @@ function App()
     .then(r => r.json())
     .then(d => {
       console.log(d);
-      loadPosts(state.currentView, state.current);
+      loadPosts(state.currentView,  0, state.current);
       setState({
         ...state,
         text: ""
@@ -189,13 +189,13 @@ function App()
 
   };
 
-  React.useEffect(() => loadPosts(state.currentView, state.current), []);
+  React.useEffect(() => loadPosts(state.currentView, state.profileUser ? state.profileUser.id : 0, state.current), []);
   return (
     <>
       <Navbar user={state.user} home={handleAllPost} profile={handleProfile} logout={handleLogout}/>
       {state.currentView === 'allposts' && <Form value={state.text} onChange={handleChange} onSubmit={handleSubmit}/>}
-      {state.currentView === 'profile' && <Profile user={state.user}/>}
-      <Page data={state.posts}  f={handleLike} follow={handleFollow}/>
+      {state.currentView === 'profile' && <Profile follow={handleFollow} user={state.profileUser} username={state.user ? state.user.username : null}/>}
+      <Page data={state.posts}  f={handleLike} profile={handleProfile}/>
       
       {state.numOfPages && 
       <nav aria-label="...">

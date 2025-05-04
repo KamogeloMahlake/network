@@ -7,6 +7,7 @@ class User(AbstractUser):
     
     def to_json(self):
         return {
+            "id": self.id,
             "username": self.username,
             "followers": self.followers.count(),
             "following": [user.username for user in self.following.all()]
