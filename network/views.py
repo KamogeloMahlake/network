@@ -81,8 +81,31 @@ def like(request, id):
     return JsonResponse({"like": True})
 
 
-def edit(request):
-    pass 
+def edit(request, id):
+    if request.method != "PUT":
+        return JsonResponse({"error": "PUT request required"}, status=400)
+    
+    if not request.user.username:
+        return JsonResponse({"error": "User must login"}, status=400)
+    
+    try:
+        post = Post.objects.get(pk=id)
+
+        if post.author != request.user:
+            return JsonResponse({"error": "Not allowed to edit post"}, status=401)
+        
+        data = json.loads(request.body)
+
+        if data["text"]:
+            post.text = data["text"]
+            post.save()
+
+            return JsonResponse({"message": "Post successfully saved"}, status=201)
+    
+        return JsonResponse({"error": "PUT can not be empty"}, status=400)
+    except Post.DoesNotExist:
+        return JsonResponse({"error": "Post not found"}, status=404)
+    
 
 def index(request):
     return render(request, "network/index.html")

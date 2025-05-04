@@ -1,4 +1,4 @@
-function Navbar({user, profile, home, logout})
+function Navbar({user, profile, home, logout, following})
 {
   return (
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -15,7 +15,7 @@ function Navbar({user, profile, home, logout})
         </li>
         {user &&
         <li class="nav-item">
-          <a class="nav-link" href="">Following</a>
+          <a class="nav-link" onClick={following}>Following</a>
         </li>
         }
         {user &&
@@ -60,13 +60,46 @@ function Form({value, onSubmit, onChange})
   );
 }
 
-function Post({id, author, authorId, text, date, likes, following, isAuthor, click, follow, liked, profile})
+function Post({id, author, authorId, text, date, likes, click, liked, profile})
 {
+  const [s, setS] = React.useState({
+    text: text,
+    mode: false
+  });
+
+  const submit = (e) => {
+    e.preventDefault();
+    fetch(`/edit/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({
+        text: s.text
+      })
+    }).then(r => r.json())
+    .then(d => {
+      console.log(e);
+      setS({...s, mode: false});
+    }).catch(e => console.log(e));
+
+  };
+  const change = (e) => {
+    setS({...s, text: e.target.value});
+  };
+  const handleEdit = () => {
+    setS({...s, mode: true})
+  };
+
   return (
     <div className="p-3" style={{border: "1px solid black", margin: "2rem"}}>
-        <h2 onClick={profile} id={authorId}>{author}</h2>
-      <a>Edit</a>
-      <p style={{fontWeight: "bold"}}>{text}</p>
+        <a><h2 onClick={profile} id={authorId}>{author}</h2></a>
+      <a data-id={id} onClick={handleEdit}>Edit</a>
+      {s.mode ?
+       <>
+        <textarea className="form-control" rows="2" value={s.text} onChange={change}>    
+        </textarea>
+        <button onClick={submit} type="submit" className="btn btn-primary d-flex mt-2">Save</button>
+       </>
+       : <p style={{fontWeight: "bold"}}>{text}</p>}
+      
       <p>{date}</p>
       <div>
         <button id={id} onClick={click} className="btn btn-link text-decoration-none text-danger p-0 mt-2"><i id={id} className={liked ? "fas fa-heart" : "far fa-heart"}></i> {likes}</button>
@@ -83,9 +116,9 @@ function Page({data, f, profile})
   {
   return (
     <div>
-      {data.map(({id, author, authorId, text, date, likes, following, isAuthor, liked}, index) => {
+      {data.map(({id, author, authorId, text, date, likes, liked}, index) => {
         return (
-          <Post profile={profile} liked={liked} authorId={authorId}  id={id} click={f} author={author} text={text} date={date} likes={likes} key={index} following={following} isAuthor={isAuthor}/>
+          <Post profile={profile} liked={liked} authorId={authorId}  id={id} click={f} author={author} text={text} date={date} likes={likes} key={index} />
         )
       })}
     </div>
@@ -126,6 +159,10 @@ function App()
     next: false,
     currentView: "allposts"
     });
+
+  const handleFollowing = () => {
+    loadPosts("following", 0, 1);
+  };
 
   const handleFollow = (e) => {
     fetch(`/follow/${parseInt(e.target.id)}`).then(r => r.json()).then(d => {
@@ -192,7 +229,7 @@ function App()
   React.useEffect(() => loadPosts(state.currentView, state.profileUser ? state.profileUser.id : 0, state.current), []);
   return (
     <>
-      <Navbar user={state.user} home={handleAllPost} profile={handleProfile} logout={handleLogout}/>
+      <Navbar following={handleFollowing} user={state.user} home={handleAllPost} profile={handleProfile} logout={handleLogout}/>
       {(state.currentView === 'allposts' && state.user) && <Form value={state.text} onChange={handleChange} onSubmit={handleSubmit}/>}
       {state.currentView === 'profile' && <Profile follow={handleFollow} user={state.profileUser} username={state.user ? state.user.username : null}/>}
       <Page data={state.posts}  f={handleLike} profile={handleProfile}/>

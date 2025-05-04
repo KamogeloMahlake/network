@@ -11,5 +11,6 @@ urlpatterns = [
     path("compose", views.compose, name="compose"),
     path("posts/<str:view>/<int:id>/<int:page_nr>", views.posts, name="posts"),
     path("like/<int:id>", views.like, name="like"),
-    path("follow/<int:id>", views.follow, name="follow")
+    path("follow/<int:id>", views.follow, name="follow"),
+    path("edit/<int:id>", views.edit, name="edit")
 ]
