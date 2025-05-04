@@ -108,7 +108,7 @@ function Profile({user, username, follow})
       <p>Following: {user.following.length}</p>
 
       {username && 
-      <button className={user.following.include(username) ? "btn btn-danger" : "btn btn-primary"} id={user.id} onClick={follow} disabled={user.username === username ? true : false}>{user.following.include(username) ? "Unfollow": "Follow"}</button>}
+      <button className={user.following.includes(username) ? "btn btn-danger" : "btn btn-primary"} id={user.id} onClick={follow} disabled={user.username === username ? true : false}>{user.following.includes(username) ? "Unfollow": "Follow"}</button>}
     </div>
   )
 }
@@ -193,7 +193,7 @@ function App()
   return (
     <>
       <Navbar user={state.user} home={handleAllPost} profile={handleProfile} logout={handleLogout}/>
-      {state.currentView === 'allposts' && <Form value={state.text} onChange={handleChange} onSubmit={handleSubmit}/>}
+      {(state.currentView === 'allposts' && state.user) && <Form value={state.text} onChange={handleChange} onSubmit={handleSubmit}/>}
       {state.currentView === 'profile' && <Profile follow={handleFollow} user={state.profileUser} username={state.user ? state.user.username : null}/>}
       <Page data={state.posts}  f={handleLike} profile={handleProfile}/>
       

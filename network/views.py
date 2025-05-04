@@ -10,7 +10,6 @@ from django.views.decorators.csrf import csrf_exempt
 
 from .models import User, Post 
 
-
 @csrf_exempt 
 @login_required
 def compose(request):
@@ -35,9 +34,13 @@ def compose(request):
 def posts(request, view, id, page_nr):
     if view == "allposts":
         posts = Post.objects.all().order_by("-date")
+    
     elif view == "profile":
         user = User.objects.get(pk=id)
         posts = Post.objects.filter(author=user).order_by("-date")
+
+    elif view == "following" and request.user.username:
+        posts = Post.objects.filter(author__in=request.user.following.all()).order_by("-date")
 
     p = Paginator(posts, 10)
     current_posts = p.page(page_nr)
@@ -52,8 +55,6 @@ def posts(request, view, id, page_nr):
         "next": current_posts.has_next()
     })
 
-def following(request):
-    pass 
 
 def follow(request, id):
     user = User.objects.get(pk=id)
@@ -78,11 +79,10 @@ def like(request, id):
         post.like.add(request.user)
 
     return JsonResponse({"like": True})
-     
+
+
 def edit(request):
     pass 
-
-
 
 def index(request):
     return render(request, "network/index.html")
