@@ -7,7 +7,7 @@ function Navbar({user, profile, home, logout, following})
       <ul class="navbar-nav mr-auto">
         {user &&
         <li class="nav-item">
-          <a onClick={profile} class="nav-link"><strong id="username">{user.username}</strong></a>
+          <a onClick={profile} class="nav-link"><strong id={user.id}>{user.username}</strong></a>
         </li>
         }
         <li class="nav-item">
@@ -60,7 +60,7 @@ function Form({value, onSubmit, onChange})
   );
 }
 
-function Post({id, author, authorId, text, date, likes, click, liked, profile})
+function Post({id, author, authorId, text, date, likes, click, liked, profile, posts, isAuthor})
 {
   const [s, setS] = React.useState({
     text: text,
@@ -78,6 +78,7 @@ function Post({id, author, authorId, text, date, likes, click, liked, profile})
     .then(d => {
       console.log(e);
       setS({...s, mode: false});
+      posts();
     }).catch(e => console.log(e));
 
   };
@@ -91,14 +92,17 @@ function Post({id, author, authorId, text, date, likes, click, liked, profile})
   return (
     <div className="p-3" style={{border: "1px solid black", margin: "2rem"}}>
         <a><h2 onClick={profile} id={authorId}>{author}</h2></a>
-      <a data-id={id} onClick={handleEdit}>Edit</a>
       {s.mode ?
        <>
         <textarea className="form-control" rows="2" value={s.text} onChange={change}>    
         </textarea>
         <button onClick={submit} type="submit" className="btn btn-primary d-flex mt-2">Save</button>
        </>
-       : <p style={{fontWeight: "bold"}}>{text}</p>}
+       :
+       <> 
+        {isAuthor && <a data-id={id} onClick={handleEdit}>Edit</a>}
+        <p style={{fontWeight: "bold"}}>{text}</p>
+      </>}
       
       <p>{date}</p>
       <div>
@@ -109,16 +113,26 @@ function Post({id, author, authorId, text, date, likes, click, liked, profile})
 }
 
 
-function Page({data, f, profile})
+function Page({data, f, profile, posts, title})
 {
-
+  let t = ''
+  switch (title) {
+    case 'allposts':
+      t = 'All Posts';
+      break;
+    case 'following':
+      t = 'Following';
+    default:
+      break;
+  }
   if (data)
   {
   return (
     <div>
-      {data.map(({id, author, authorId, text, date, likes, liked}, index) => {
+      {t && <h1 style={{margin: "2rem"}}>{t}</h1>}
+      {data.map(({id, author, authorId, text, date, likes, liked, isAuthor}, index) => {
         return (
-          <Post profile={profile} liked={liked} authorId={authorId}  id={id} click={f} author={author} text={text} date={date} likes={likes} key={index} />
+          <Post posts={posts} profile={profile} liked={liked} isAuthor={isAuthor} authorId={authorId}  id={id} click={f} author={author} text={text} date={date} likes={likes} key={index} />
         )
       })}
     </div>
@@ -137,11 +151,11 @@ function Profile({user, username, follow})
   return (
     <div style={{margin: "2rem"}}>
       <h1>Profile: {user.username}</h1>
-      <p>Follower: {user.followers}</p>
+      <p>Followers: {user.followers}</p>
       <p>Following: {user.following.length}</p>
 
       {username && 
-      <button className={user.following.includes(username) ? "btn btn-danger" : "btn btn-primary"} id={user.id} onClick={follow} disabled={user.username === username ? true : false}>{user.following.includes(username) ? "Unfollow": "Follow"}</button>}
+      <button className={user.isFollowing ? "btn btn-danger" : "btn btn-primary"} id={user.id} onClick={follow} disabled={user.username === username.username ? true : false}>{user.isFollowing ? "Unfollow": "Follow"}</button>}
     </div>
   )
 }
@@ -174,7 +188,6 @@ function App()
     fetch('/logout').then(r => r.json).then(_d => loadPosts('allpost', 0, 1));
   };
   const handleProfile = (e) => {
-    
     loadPosts("profile", e.target.id, 1);
   };
 
@@ -231,10 +244,10 @@ function App()
     <>
       <Navbar following={handleFollowing} user={state.user} home={handleAllPost} profile={handleProfile} logout={handleLogout}/>
       {(state.currentView === 'allposts' && state.user) && <Form value={state.text} onChange={handleChange} onSubmit={handleSubmit}/>}
-      {state.currentView === 'profile' && <Profile follow={handleFollow} user={state.profileUser} username={state.user ? state.user.username : null}/>}
-      <Page data={state.posts}  f={handleLike} profile={handleProfile}/>
+      {state.currentView === 'profile' && <Profile follow={handleFollow} user={state.profileUser} username={state.user}/>}
+      <Page posts={() => loadPosts(state.currentView, state.profileUser ? state.profileUser.id : 0, state.current)} data={state.posts} title={state.currentView}  f={handleLike} profile={handleProfile}/>
       
-      {state.numOfPages && 
+      {state.numOfPages > 1 && 
       <nav aria-label="...">
         <ul class="pagination justify-content-center">
           <li class={state.prev ? "page-item" : "page-item disabled"}>

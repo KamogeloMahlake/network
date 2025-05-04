@@ -46,8 +46,8 @@ def posts(request, view, id, page_nr):
     current_posts = p.page(page_nr)
     
     return JsonResponse({
-        "user": request.user.to_json() if request.user.username else None ,
-        "profileUser": user.to_json() if view == "profile" else None,
+        "user": request.user.to_json(request.user) if request.user.username else None ,
+        "profileUser": user.to_json(request.user) if view == "profile" else None,
         "posts": [post.to_json(request.user) for post in current_posts.object_list],
         "num": p.num_pages,
         "current": page_nr,
@@ -80,7 +80,7 @@ def like(request, id):
 
     return JsonResponse({"like": True})
 
-
+@csrf_exempt
 def edit(request, id):
     if request.method != "PUT":
         return JsonResponse({"error": "PUT request required"}, status=400)

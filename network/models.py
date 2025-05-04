@@ -5,12 +5,13 @@ from django.db import models
 class User(AbstractUser):
     followers = models.ManyToManyField("self", related_name="following", blank=True, symmetrical=False)
     
-    def to_json(self):
+    def to_json(self, user):
         return {
             "id": self.id,
             "username": self.username,
             "followers": self.followers.count(),
-            "following": [user.username for user in self.following.all()]
+            "following": [user.username for user in self.following.all()],
+            "isFollowing": user in self.followers.all()
         }
 
 
